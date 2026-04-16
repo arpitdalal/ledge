@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { ArrowDownCircle, ArrowUpCircle, Landmark, ListChecks, Plus, Tags } from "lucide-react";
+import { ArrowDownCircle, ArrowUpCircle, Landmark, ListChecks, Plus, Repeat, Tags } from "lucide-react";
 
 import { KpiCard } from "@/components/dashboard/kpi-card";
 import { MonthlyIncomeExpenseChart, SpendByCategoryChart } from "@/components/dashboard/dashboard-charts";
+import { UpcomingCashFlowSection } from "@/components/recurring/upcoming-cash-flow";
 import { TransactionList } from "@/components/transactions/transaction-list";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +34,12 @@ export default async function DashboardPage() {
             </Link>
           </Button>
           <Button asChild variant="outline">
+            <Link href="/recurring">
+              <Repeat className="h-4 w-4" />
+              Manage recurring
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
             <Link href="/categories">
               <Tags className="h-4 w-4" />
               Manage categories
@@ -42,15 +49,18 @@ export default async function DashboardPage() {
       </div>
 
       {!data.hasTransactions ? (
-        <EmptyState
-          title="No transactions yet"
-          description="Add your first transaction or reset demo data from Settings to see the full dashboard."
-          action={
-            <Button asChild>
-              <Link href="/transactions/new">Add transaction</Link>
-            </Button>
-          }
-        />
+        <>
+          <EmptyState
+            title="No transactions yet"
+            description="Add your first transaction or reset demo data from Settings to see the full dashboard."
+            action={
+              <Button asChild>
+                <Link href="/transactions/new">Add transaction</Link>
+              </Button>
+            }
+          />
+          <UpcomingCashFlowSection data={data.upcoming} currency={currency} locale={locale} />
+        </>
       ) : (
         <>
           <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4" aria-label="Current month summary">
@@ -81,11 +91,13 @@ export default async function DashboardPage() {
             </Card>
           </section>
 
+          <UpcomingCashFlowSection data={data.upcoming} currency={currency} locale={locale} />
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between gap-4">
               <div>
                 <CardTitle>Recent transactions</CardTitle>
-                <CardDescription>Latest activity in the local workspace.</CardDescription>
+                <CardDescription>Latest posted activity in the local workspace.</CardDescription>
               </div>
               <Button asChild variant="outline" size="sm">
                 <Link href="/transactions">View all</Link>

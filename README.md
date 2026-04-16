@@ -116,7 +116,7 @@ The app uses a single local workspace instead of authentication. Domain logic st
 - Reports use pure aggregation helpers that are unit-tested separately from Prisma access.
 - Categories carry type, color, icon, and default/custom flags, which keeps future cash-flow views predictable.
 
-Recurring transactions are intentionally not implemented. The schema and folders leave room for a future `RecurringRule` model and a future navigation section without forcing that concern into current transaction code.
+Recurring transactions live in `lib/domain/recurring` with a pure recurrence engine in `recurrence.ts`, service+actions wrapping Prisma, `/recurring` routes, and a dashboard upcoming cash-flow section. Upcoming occurrences are projected on demand for a rolling 30-day horizon and never leak into historical reports; skipping or editing a single occurrence is stored on `RecurringOccurrence` so the rest of the series continues untouched.
 
 ## Testing
 

@@ -8,28 +8,31 @@ datasource db {
 }
 
 model Workspace {
-  id           String        @id @default(cuid())
-  name         String
-  currency     String        @default("CAD")
-  locale       String        @default("en-CA")
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  categories   Category[]
-  transactions Transaction[]
+  id             String          @id @default(cuid())
+  name           String
+  currency       String          @default("CAD")
+  locale         String          @default("en-CA")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  categories     Category[]
+  transactions   Transaction[]
+  recurringRules RecurringRule[]
 }
 
 model Category {
-  id           String        @id @default(cuid())
-  workspaceId  String
-  name         String
-  type         String
-  color        String
-  icon         String
-  isDefault    Boolean       @default(false)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  workspace    Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  transactions Transaction[]
+  id             String                @id @default(cuid())
+  workspaceId    String
+  name           String
+  type           String
+  color          String
+  icon           String
+  isDefault      Boolean               @default(false)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  workspace      Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  transactions   Transaction[]
+  recurringRules RecurringRule[]
+  occurrences    RecurringOccurrence[]
 
   @@unique([workspaceId, name, type])
   @@index([workspaceId, type])
@@ -53,4 +56,47 @@ model Transaction {
   @@index([workspaceId, date])
   @@index([workspaceId, type])
   @@index([categoryId])
+}
+
+model RecurringRule {
+  id            String                @id @default(cuid())
+  workspaceId   String
+  categoryId    String
+  type          String
+  amount        Int
+  payee         String
+  note          String?
+  paymentMethod String?
+  frequency     String
+  startDate     DateTime
+  endDate       DateTime?
+  status        String                @default("ACTIVE")
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  workspace     Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  category      Category              @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  occurrences   RecurringOccurrence[]
+
+  @@index([workspaceId, status])
+  @@index([categoryId])
+}
+
+model RecurringOccurrence {
+  id            String        @id @default(cuid())
+  ruleId        String
+  scheduledDate DateTime
+  kind          String
+  amount        Int?
+  payee         String?
+  note          String?
+  paymentMethod String?
+  date          DateTime?
+  categoryId    String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  rule          RecurringRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  category      Category?     @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@unique([ruleId, scheduledDate])
+  @@index([ruleId])
 }

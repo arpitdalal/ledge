@@ -5,14 +5,14 @@ import { getWorkspace } from "@/lib/domain/workspace/service";
 import { categoryFormSchema, type CategoryFormValues } from "@/lib/validation/category";
 
 export type CategoryWithCount = Prisma.CategoryGetPayload<{
-  include: { _count: { select: { transactions: true } } };
+  include: { _count: { select: { transactions: true; recurringRules: true } } };
 }>;
 
 export async function listCategories() {
   const workspace = await getWorkspace();
   return prisma.category.findMany({
     where: { workspaceId: workspace.id },
-    include: { _count: { select: { transactions: true } } },
+    include: { _count: { select: { transactions: true, recurringRules: true } } },
     orderBy: [{ type: "asc" }, { isDefault: "desc" }, { name: "asc" }]
   });
 }
@@ -82,13 +82,19 @@ export async function deleteCategory(id: string) {
   const workspace = await getWorkspace();
   const category = await prisma.category.findFirst({
     where: { id, workspaceId: workspace.id },
-    include: { _count: { select: { transactions: true } } }
+    include: { _count: { select: { transactions: true, recurringRules: true } } }
   });
 
   if (!category) return { ok: false as const, error: "Category not found." };
   if (category.isDefault) return { ok: false as const, error: "Default categories are part of the demo baseline." };
   if (category._count.transactions > 0) {
     return { ok: false as const, error: "This category has transactions. Reassign or delete those transactions first." };
+  }
+  if (category._count.recurringRules > 0) {
+    return {
+      ok: false as const,
+      error: "This category is used by recurring rules. Update or delete those rules first."
+    };
   }
 
   await prisma.category.delete({ where: { id } });

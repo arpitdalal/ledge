@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 
+import { UpcomingList } from "@/components/recurring/upcoming-list";
 import { TransactionFilters } from "@/components/transactions/transaction-filters";
 import { TransactionList } from "@/components/transactions/transaction-list";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { listCategories } from "@/lib/domain/categories/service";
+import { getUpcomingCashFlow } from "@/lib/domain/recurring/service";
 import { listTransactions } from "@/lib/domain/transactions/service";
 import { getWorkspace } from "@/lib/domain/workspace/service";
 import type { TransactionFilterInput, TransactionSort } from "@/lib/domain/transactions/filters";
@@ -38,10 +40,11 @@ export default async function TransactionsPage({ searchParams }: PageProps) {
     sort: (normalized.sort as TransactionSort | undefined) ?? "newest"
   };
 
-  const [workspace, categories, transactions] = await Promise.all([
+  const [workspace, categories, transactions, upcoming] = await Promise.all([
     getWorkspace(),
     listCategories(),
-    listTransactions(filters)
+    listTransactions(filters),
+    getUpcomingCashFlow()
   ]);
 
   return (
@@ -61,6 +64,29 @@ export default async function TransactionsPage({ searchParams }: PageProps) {
 
       <TransactionFilters categories={categories} searchParams={normalized} />
 
+      {upcoming.occurrences.length > 0 && (
+        <Card aria-label="Upcoming recurring transactions">
+          <CardHeader className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <CardTitle>Upcoming recurring</CardTitle>
+              <CardDescription>
+                Next {upcoming.horizonDays} days · projected from recurring rules, not posted history.
+              </CardDescription>
+            </div>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/recurring">Manage recurring</Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <UpcomingList
+              occurrences={upcoming.occurrences.slice(0, 6)}
+              currency={workspace.currency}
+              locale={workspace.locale}
+            />
+          </CardContent>
+        </Card>
+      )}
+
       {transactions.length === 0 ? (
         <EmptyState
           title="No transactions match"
@@ -74,9 +100,9 @@ export default async function TransactionsPage({ searchParams }: PageProps) {
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>All transactions</CardTitle>
+            <CardTitle>Posted transactions</CardTitle>
             <CardDescription>
-              {transactions.length} result{transactions.length === 1 ? "" : "s"}
+              {transactions.length} result{transactions.length === 1 ? "" : "s"} · manually posted history
             </CardDescription>
           </CardHeader>
           <CardContent>

@@ -2,6 +2,7 @@ import { endOfMonth, startOfMonth } from "date-fns";
 
 import { prisma } from "@/lib/db/client";
 import { calculateSummary, categoryBreakdown } from "@/lib/domain/reports/calculations";
+import { getUpcomingCashFlow } from "@/lib/domain/recurring/service";
 import { getRecentMonthlyChart } from "@/lib/domain/reports/service";
 import { getWorkspace } from "@/lib/domain/workspace/service";
 
@@ -10,7 +11,7 @@ export async function getDashboardData() {
   const start = startOfMonth(new Date());
   const end = endOfMonth(start);
 
-  const [currentMonthTransactions, recentTransactions, monthlyChart] = await Promise.all([
+  const [currentMonthTransactions, recentTransactions, monthlyChart, upcoming] = await Promise.all([
     prisma.transaction.findMany({
       where: {
         workspaceId: workspace.id,
@@ -25,7 +26,8 @@ export async function getDashboardData() {
       orderBy: { date: "desc" },
       take: 8
     }),
-    getRecentMonthlyChart(4)
+    getRecentMonthlyChart(4),
+    getUpcomingCashFlow()
   ]);
 
   return {
@@ -34,6 +36,7 @@ export async function getDashboardData() {
     spendByCategory: categoryBreakdown(currentMonthTransactions),
     monthlyChart,
     recentTransactions,
+    upcoming,
     hasTransactions: recentTransactions.length > 0
   };
 }

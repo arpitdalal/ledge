@@ -1,7 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
 import { addMonths, setDate, startOfMonth } from "date-fns";
 
-import type { TransactionType } from "@/lib/domain/constants";
+import type { RecurrenceFrequency, TransactionType } from "@/lib/domain/constants";
 
 const workspaceSeed = {
   name: "Personal",
@@ -31,7 +31,54 @@ const categorySeeds: Array<{
 
 const cents = (amount: number) => Math.round(amount * 100);
 
+const recurringSeeds: Array<{
+  payee: string;
+  type: TransactionType;
+  amount: number;
+  category: string;
+  frequency: RecurrenceFrequency;
+  startOffsetMonths: number;
+  day: number;
+  note?: string;
+  paymentMethod?: string;
+}> = [
+  {
+    payee: "Harrington Lofts",
+    type: "EXPENSE",
+    amount: 1850,
+    category: "Rent",
+    frequency: "MONTHLY",
+    startOffsetMonths: -3,
+    day: 2,
+    note: "Monthly rent",
+    paymentMethod: "Pre-authorized"
+  },
+  {
+    payee: "Streaming Co.",
+    type: "EXPENSE",
+    amount: 18.99,
+    category: "Subscriptions",
+    frequency: "MONTHLY",
+    startOffsetMonths: -3,
+    day: 7,
+    paymentMethod: "Credit card"
+  },
+  {
+    payee: "Northstar Studio",
+    type: "INCOME",
+    amount: 4650,
+    category: "Salary",
+    frequency: "BIWEEKLY",
+    startOffsetMonths: -3,
+    day: 1,
+    note: "Payroll deposit",
+    paymentMethod: "Bank transfer"
+  }
+];
+
 export async function seedDemoData(db: PrismaClient) {
+  await db.recurringOccurrence.deleteMany();
+  await db.recurringRule.deleteMany();
   await db.transaction.deleteMany();
   await db.category.deleteMany();
   await db.workspace.deleteMany();
@@ -98,6 +145,26 @@ export async function seedDemoData(db: PrismaClient) {
   });
 
   await db.transaction.createMany({ data: transactions });
+
+  for (const rule of recurringSeeds) {
+    const category = categoryByName.get(rule.category);
+    if (!category) continue;
+    const start = setDate(addMonths(currentMonth, rule.startOffsetMonths), rule.day);
+    await db.recurringRule.create({
+      data: {
+        workspaceId: workspace.id,
+        categoryId: category.id,
+        type: rule.type,
+        amount: cents(rule.amount),
+        payee: rule.payee,
+        note: rule.note ?? null,
+        paymentMethod: rule.paymentMethod ?? null,
+        frequency: rule.frequency,
+        startDate: start,
+        status: "ACTIVE"
+      }
+    });
+  }
 
   return workspace;
 }

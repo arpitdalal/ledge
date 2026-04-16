@@ -126,6 +126,12 @@ function CategoryCard({ category }: { category: CategoryWithCount }) {
         <div className="text-sm text-[hsl(var(--muted-foreground))]">
           {category._count.transactions} transaction
           {category._count.transactions === 1 ? "" : "s"}
+          {category._count.recurringRules > 0 && (
+            <span className="ml-2">
+              · {category._count.recurringRules} recurring rule
+              {category._count.recurringRules === 1 ? "" : "s"}
+            </span>
+          )}
         </div>
         {message && (
           <p className="rounded-md bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-200">
