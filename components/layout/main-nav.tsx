@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, CreditCard, LayoutDashboard, Settings, Tags } from "lucide-react";
+import { BarChart3, CreditCard, LayoutDashboard, Repeat, Settings, Tags } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/transactions", label: "Transactions", icon: CreditCard },
+  { href: "/recurring", label: "Recurring", icon: Repeat },
   { href: "/categories", label: "Categories", icon: Tags },
   { href: "/reports", label: "Reports", icon: BarChart3 },
   { href: "/settings", label: "Settings", icon: Settings }

@@ -11,6 +11,8 @@ import {
 import { transactionFormSchema } from "@/lib/validation/transaction";
 
 async function seedBase() {
+  await prisma.recurringOccurrence.deleteMany();
+  await prisma.recurringRule.deleteMany();
   await prisma.transaction.deleteMany();
   await prisma.category.deleteMany();
   await prisma.workspace.deleteMany();

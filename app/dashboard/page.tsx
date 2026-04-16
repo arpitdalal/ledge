@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { ArrowDownCircle, ArrowUpCircle, Landmark, ListChecks, Plus, Tags } from "lucide-react";
+import { ArrowDownCircle, ArrowUpCircle, Landmark, ListChecks, Plus, Repeat, Tags } from "lucide-react";
 
 import { KpiCard } from "@/components/dashboard/kpi-card";
 import { MonthlyIncomeExpenseChart, SpendByCategoryChart } from "@/components/dashboard/dashboard-charts";
+import { UpcomingCashFlowSection } from "@/components/recurring/upcoming-cash-flow";
 import { TransactionList } from "@/components/transactions/transaction-list";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,6 +31,12 @@ export default async function DashboardPage() {
             <Link href="/transactions/new">
               <Plus className="h-4 w-4" />
               Add transaction
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/recurring">
+              <Repeat className="h-4 w-4" />
+              Recurring
             </Link>
           </Button>
           <Button asChild variant="outline">
@@ -81,11 +88,13 @@ export default async function DashboardPage() {
             </Card>
           </section>
 
+          <UpcomingCashFlowSection upcoming={data.upcoming} currency={currency} locale={locale} />
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between gap-4">
               <div>
                 <CardTitle>Recent transactions</CardTitle>
-                <CardDescription>Latest activity in the local workspace.</CardDescription>
+                <CardDescription>Latest posted activity in the local workspace.</CardDescription>
               </div>
               <Button asChild variant="outline" size="sm">
                 <Link href="/transactions">View all</Link>

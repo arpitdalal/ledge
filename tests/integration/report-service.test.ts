@@ -5,6 +5,8 @@ import { getMonthlyReport, getRecentMonthlyChart, normalizeReportPeriod } from "
 
 describe("report aggregation", () => {
   beforeEach(async () => {
+    await prisma.recurringOccurrence.deleteMany();
+    await prisma.recurringRule.deleteMany();
     await prisma.transaction.deleteMany();
     await prisma.category.deleteMany();
     await prisma.workspace.deleteMany();

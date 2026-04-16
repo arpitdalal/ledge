@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { categoryFormSchema } from "@/lib/validation/category";
+import { recurringFormSchema } from "@/lib/validation/recurring";
 import { settingsFormSchema } from "@/lib/validation/settings";
 import { transactionFormSchema, transactionWriteSchema } from "@/lib/validation/transaction";
 
@@ -120,5 +121,26 @@ describe("form validation schemas", () => {
     expect(errors.name).toEqual(["Workspace name is required."]);
     expect(errors.currency).toEqual(["Choose a supported currency."]);
     expect(errors.locale).toEqual(["Locale is too long."]);
+  });
+
+  it("rejects calendar-invalid recurring start and end dates", () => {
+    const parsed = recurringFormSchema.safeParse({
+      payee: "Rent",
+      type: "EXPENSE",
+      amount: "1850",
+      categoryId: "category-id",
+      frequency: "MONTHLY",
+      startDate: "2026-02-30",
+      endDate: "2026-11-31",
+      note: "",
+      paymentMethod: ""
+    });
+
+    expect(parsed.success).toBe(false);
+    if (parsed.success) return;
+
+    const errors = parsed.error.flatten().fieldErrors;
+    expect(errors.startDate).toEqual(["Use a valid date."]);
+    expect(errors.endDate).toEqual(["Use a valid end date."]);
   });
 });

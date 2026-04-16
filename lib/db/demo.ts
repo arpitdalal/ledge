@@ -1,7 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
-import { addMonths, setDate, startOfMonth } from "date-fns";
+import { addMonths, setDate, startOfMonth, subMonths } from "date-fns";
 
-import type { TransactionType } from "@/lib/domain/constants";
+import type { RecurringFrequency, TransactionType } from "@/lib/domain/constants";
 
 const workspaceSeed = {
   name: "Personal",
@@ -32,6 +32,8 @@ const categorySeeds: Array<{
 const cents = (amount: number) => Math.round(amount * 100);
 
 export async function seedDemoData(db: PrismaClient) {
+  await db.recurringOccurrence.deleteMany();
+  await db.recurringRule.deleteMany();
   await db.transaction.deleteMany();
   await db.category.deleteMany();
   await db.workspace.deleteMany();
@@ -98,6 +100,76 @@ export async function seedDemoData(db: PrismaClient) {
   });
 
   await db.transaction.createMany({ data: transactions });
+
+  const recurringStart = subMonths(currentMonth, 2);
+  const recurringSeeds: Array<{
+    categoryName: string;
+    type: TransactionType;
+    amount: number;
+    frequency: RecurringFrequency;
+    dayOfMonth?: number;
+    payee: string;
+    note?: string;
+    paymentMethod?: string;
+  }> = [
+    {
+      categoryName: "Salary",
+      type: "INCOME",
+      amount: 4650,
+      frequency: "MONTHLY",
+      dayOfMonth: 1,
+      payee: "Northstar Studio",
+      note: "Monthly payroll",
+      paymentMethod: "Bank transfer"
+    },
+    {
+      categoryName: "Rent",
+      type: "EXPENSE",
+      amount: 1850,
+      frequency: "MONTHLY",
+      dayOfMonth: 2,
+      payee: "Harrington Lofts",
+      note: "Rent",
+      paymentMethod: "Pre-authorized"
+    },
+    {
+      categoryName: "Subscriptions",
+      type: "EXPENSE",
+      amount: 18.99,
+      frequency: "MONTHLY",
+      dayOfMonth: 7,
+      payee: "Streaming Co.",
+      paymentMethod: "Credit card"
+    },
+    {
+      categoryName: "Transport",
+      type: "EXPENSE",
+      amount: 156,
+      frequency: "MONTHLY",
+      dayOfMonth: 5,
+      payee: "PRESTO monthly pass",
+      paymentMethod: "Credit card"
+    }
+  ];
+
+  for (const seed of recurringSeeds) {
+    const category = categoryByName.get(seed.categoryName);
+    if (!category) continue;
+    await db.recurringRule.create({
+      data: {
+        workspaceId: workspace.id,
+        categoryId: category.id,
+        type: seed.type,
+        amount: cents(seed.amount),
+        frequency: seed.frequency,
+        startDate: setDate(recurringStart, seed.dayOfMonth ?? 1),
+        status: "ACTIVE",
+        payee: seed.payee,
+        note: seed.note ?? null,
+        paymentMethod: seed.paymentMethod ?? null
+      }
+    });
+  }
 
   return workspace;
 }

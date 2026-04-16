@@ -34,3 +34,14 @@ export const CATEGORY_ICONS = [
 export type CategoryIcon = (typeof CATEGORY_ICONS)[number];
 
 export const PAYMENT_METHODS = ["Debit", "Credit card", "Cash", "Bank transfer", "Pre-authorized"] as const;
+
+export const RECURRING_FREQUENCIES = ["WEEKLY", "BIWEEKLY", "MONTHLY", "YEARLY"] as const;
+export type RecurringFrequency = (typeof RECURRING_FREQUENCIES)[number];
+
+export const RECURRING_RULE_STATUSES = ["ACTIVE", "PAUSED"] as const;
+export type RecurringRuleStatus = (typeof RECURRING_RULE_STATUSES)[number];
+
+export const RECURRING_OCCURRENCE_STATUSES = ["SKIPPED", "MODIFIED"] as const;
+export type RecurringOccurrenceStatus = (typeof RECURRING_OCCURRENCE_STATUSES)[number];
+
+export const UPCOMING_HORIZON_DAYS = 30;

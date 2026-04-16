@@ -7,6 +7,8 @@ import { getDashboardData } from "@/lib/domain/dashboard/service";
 import { resetDemoWorkspace, updateSettings } from "@/lib/domain/settings/service";
 
 async function seedBase() {
+  await prisma.recurringOccurrence.deleteMany();
+  await prisma.recurringRule.deleteMany();
   await prisma.transaction.deleteMany();
   await prisma.category.deleteMany();
   await prisma.workspace.deleteMany();

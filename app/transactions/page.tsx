@@ -1,12 +1,14 @@
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { CalendarClock, Plus } from "lucide-react";
 
+import { UpcomingList } from "@/components/recurring/upcoming-list";
 import { TransactionFilters } from "@/components/transactions/transaction-filters";
 import { TransactionList } from "@/components/transactions/transaction-list";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { listCategories } from "@/lib/domain/categories/service";
+import { getUpcomingCashFlow } from "@/lib/domain/recurring/service";
 import { listTransactions } from "@/lib/domain/transactions/service";
 import { getWorkspace } from "@/lib/domain/workspace/service";
 import type { TransactionFilterInput, TransactionSort } from "@/lib/domain/transactions/filters";
@@ -38,10 +40,11 @@ export default async function TransactionsPage({ searchParams }: PageProps) {
     sort: (normalized.sort as TransactionSort | undefined) ?? "newest"
   };
 
-  const [workspace, categories, transactions] = await Promise.all([
+  const [workspace, categories, transactions, upcoming] = await Promise.all([
     getWorkspace(),
     listCategories(),
-    listTransactions(filters)
+    listTransactions(filters),
+    getUpcomingCashFlow()
   ]);
 
   return (
@@ -60,6 +63,35 @@ export default async function TransactionsPage({ searchParams }: PageProps) {
       </div>
 
       <TransactionFilters categories={categories} searchParams={normalized} />
+
+      {upcoming.items.length > 0 && (
+        <Card aria-label="Upcoming recurring items">
+          <CardHeader className="flex flex-row items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <span className="mt-0.5 grid h-9 w-9 place-items-center rounded-md bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))]">
+                <CalendarClock className="h-4 w-4" aria-hidden />
+              </span>
+              <div>
+                <CardTitle>Upcoming from recurring</CardTitle>
+                <CardDescription>
+                  Generated from active rules — not posted. Skip one or edit the rule in Recurring.
+                </CardDescription>
+              </div>
+            </div>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/recurring">Manage</Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <UpcomingList
+              items={upcoming.items.slice(0, 5)}
+              currency={workspace.currency}
+              locale={workspace.locale}
+              compact
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {transactions.length === 0 ? (
         <EmptyState
